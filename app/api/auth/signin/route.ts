@@ -43,12 +43,10 @@ export async function POST(request: NextRequest) {
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET!,
-      { expiresIn: "1h" }
+      { expiresIn: "7d" }
     );
-
-    // Store token in Redis with user ID as key
     await redisConfig.set(user._id.toString(), token, {
-      EX: 60 * 60, // expiry in seconds
+      EX: 60 * 60,
     });
 
     // Return response with token

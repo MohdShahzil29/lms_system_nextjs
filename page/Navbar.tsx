@@ -3,11 +3,23 @@ import React, { useEffect, useState } from "react";
 import { Menu, X, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import clsx from "clsx";
+import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { logout } from "@/redux/authSlice";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch();
+  // console.log("User image", user?.photo);
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 30);
@@ -17,6 +29,8 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  if (!isMounted) return null;
+
   return (
     <>
       <nav
@@ -24,7 +38,7 @@ const Navbar = () => {
           "fixed top-0 left-0 w-full z-50 transition-all duration-300",
           scrolled
             ? "bg-white shadow-md text-gray-900"
-            : "bg-transparent text-white backdrop-blur-sm"
+            : "bg-transparent text-blue-600 backdrop-blur-sm"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -36,32 +50,84 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <a href="#" className="hover:text-purple-500 transition">
+            <a href="/" className="hover:text-purple-500 transition">
               Home
             </a>
-            <a href="#" className="hover:text-purple-500 transition">
-              Courses
-            </a>
-            <a href="#" className="hover:text-purple-500 transition">
-              About
-            </a>
+            {user?.role === "instructor" ? (
+              <a
+                href="/instructor/createCourse"
+                className="hover:text-purple-500 transition"
+              >
+                Create Course
+              </a>
+            ) : (
+              <a href="#" className="hover:text-purple-500 transition">
+                Feadback
+              </a>
+            )}
+            {user?.role === "instructor" ? (
+              <a
+                href="/instructor/totalOrder"
+                className="hover:text-purple-500 transition"
+              >
+                Course Order
+              </a>
+            ) : (
+              <a href="#" className="hover:text-purple-500 transition">
+                About
+              </a>
+            )}
+
             <a href="#" className="hover:text-purple-500 transition">
               Contact
             </a>
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex gap-2">
-            <Button variant={scrolled ? "outline" : "secondary"} size="sm">
-              Login
-            </Button>
-            <Button
-              size="sm"
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              Signup
-            </Button>
-          </div>
+          {user ? (
+            user?.role === "instructor" ? (
+              <div className="hidden md:flex gap-2 ">
+                <Button
+                  variant={scrolled ? "outline" : "secondary"}
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => router.push("/instructor/dashboard")}
+                >
+                  Dashboard
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden md:flex gap-2 ">
+                <Button
+                  variant={scrolled ? "outline" : "secondary"}
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => router.push("/student/profile")}
+                >
+                  Profile
+                </Button>
+                <Button
+                  variant={scrolled ? "outline" : "secondary"}
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => dispatch(logout())}
+                >
+                  Logout
+                </Button>
+              </div>
+            )
+          ) : (
+            <div className="hidden md:flex gap-2 ">
+              <Button
+                variant={scrolled ? "outline" : "secondary"}
+                size="sm"
+                className="cursor-pointer"
+                onClick={() => router.push("/auth")}
+              >
+                Login
+              </Button>
+            </div>
+          )}
 
           {/* Mobile Menu Icon */}
           <div className="md:hidden">
@@ -114,15 +180,19 @@ const Navbar = () => {
           </a>
 
           <div className="pt-4 flex flex-col gap-2">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/auth")}
+            >
               Login
             </Button>
-            <Button
+            {/* <Button
               className="bg-purple-600 hover:bg-purple-700 text-white"
               size="sm"
             >
               Signup
-            </Button>
+            </Button> */}
           </div>
         </div>
       )}
